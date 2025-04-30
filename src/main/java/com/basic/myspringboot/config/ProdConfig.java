@@ -5,13 +5,13 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
 @Configuration
-@Profile("test")
-public class TestConfig {
+@Profile("prod")
+public class ProdConfig {
     @Bean
     public CustomerVO customerVO() {
         return CustomerVO.builder() //CustomerVOBuilder
-                .mode("테스트환경")
-                .rate(0.5)
+                .mode("운영환경")
+                .rate(1.5)
                 .build();
     }
 }
