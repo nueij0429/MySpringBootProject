@@ -1,0 +1,21 @@
+package com.basic.myspringboot.entity;
+
+import jakarta.persistence.*;
+
+@Entity
+@Table(name="customers")
+public class Customer {
+    //Pk 값을 persistence provider가 결정해라.
+    @Id @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
+
+    //중복을 허용하지 않고, Null도 허용하지 않는다.
+    @Column(unique = true, nullable = false)
+    private String customerId;
+
+    //Null을 허용하지 않는다.
+    @Column(nullable = false)
+    private String customerName;
+
+
+}
