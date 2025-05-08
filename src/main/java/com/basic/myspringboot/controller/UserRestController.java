@@ -48,9 +48,30 @@ public class UserRestController {
     @GetMapping("/email/{email}/")
     public User getUserByEmail(@PathVariable String email) {
         Optional<User> optionalUser = userRepository.findByEmail(email);
-        User existUser =
-                optionalUser.orElseThrow(() -> new BusinessException("User Not Found", HttpStatus.NOT_FOUND));
+        User existUser = getExistUser(optionalUser);
         return existUser;
     }
 
+    @PatchMapping("/{id}")
+    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User userDetail) {
+        User existUser = getExistUser(userRepository.findById(id));
+        //setter method 호출
+        existUser.setName(userDetail.getName());
+        User updatedUser = userRepository.save(existUser);
+        return ResponseEntity.ok(updatedUser);
+    }
+
+    private User getExistUser(Optional<User> optionalUser) {
+        User existUser = optionalUser
+                .orElseThrow(() -> new BusinessException("User Not Found", HttpStatus.NOT_FOUND));
+        return existUser;
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
+        User user = getExistUser(userRepository.findById(id));
+        userRepository.delete(user);
+        return ResponseEntity.ok("User가 삭제 되었습니다.");
+        //return ResponseEntity.noContent().build();
+    }
 }
