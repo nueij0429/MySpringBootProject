@@ -1,5 +1,6 @@
 package com.basic.myspringboot.service;
 
+import com.basic.myspringboot.controller.dto.UserDTO;
 import com.basic.myspringboot.entity.User;
 import com.basic.myspringboot.exception.BusinessException;
 import com.basic.myspringboot.repository.UserRepository;
@@ -18,8 +19,16 @@ public class UserService {
 
     //등록
     @Transactional
-    public User createUser(User user) {
-        return userRepository.save(user);
+    public UserDTO.UserResponse createUser(UserDTO.UserCreateRequest request) {
+        //Email 중복검사
+        userRepository.findByEmail(request.getEmail()) //Optional<User>
+                .ifPresent(
+                        user -> {
+                            throw new BusinessException("User with this Email already Exist",HttpStatus.CONFLICT);
+                        });
+        User user = request.toEntity();
+        User savedUser = userRepository.save(user);
+        return new UserDTO.UserResponse(savedUser);
     }
 
     public User getUserById(Long id) {
@@ -33,7 +42,7 @@ public class UserService {
 
     //수정
     @Transactional
-    public User updateUserByEmail(String email, User userDetail) {
+    public User updateUserByEmail(String email, UserDTO.UserUpdateRequest userDetail) {
         User user = getUserByEmail(email);
 
         //dirty read
