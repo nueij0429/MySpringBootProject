@@ -62,6 +62,13 @@ public class UserController {
         return "redirect:/index";
     }
 
+    @GetMapping("/delete/{id}")
+    public String deleteUser(@PathVariable("id") long id) {
+        User user = userRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Invalid user Id:" + id));
+        userRepository.delete(user);
+        return "redirect:/index";
+    }
+
     @GetMapping("/thymeleaf")
     public String leaf(Model model) {
         model.addAttribute("name", "스프링부트~!");
