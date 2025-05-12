@@ -19,18 +19,23 @@ public class UserInfoUserDetailsService implements UserDetailsService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    //로그인할 때 사용자가 입력 username을 인자로 전달받는다.
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Optional<UserInfo> optionalUserInfo = repository.findByEmail(username);
+                    //입력한 username와 매칭되는 엔티티가 있으면 해당 엔티티를 UserDetail 객체로 전달한다.
         return optionalUserInfo.map(userInfo -> new UserInfoUserDetails(userInfo))
 
-        //userInfo.map(UserInfoUserDetails::new)
+                //userInfo.map(UserInfoUserDetails::new)
+                //입력한 username와 매칭되는 엔티티가 없다면 인증 오류
                 .orElseThrow(() -> new UsernameNotFoundException("user not found " + username));
 
     }
 
     public String addUser(UserInfo userInfo) {
+        //password를 인코딩해서 저장
         userInfo.setPassword(passwordEncoder.encode(userInfo.getPassword()));
+        //UserInfo 엔티티에 username과 password를 DB에 저장
         UserInfo savedUserInfo = repository.save(userInfo);
         return savedUserInfo.getName() + " user added!!";
     }
