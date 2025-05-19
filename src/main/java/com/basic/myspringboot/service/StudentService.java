@@ -1,14 +1,15 @@
 package com.basic.myspringboot.service;
 
 import com.basic.myspringboot.controller.dto.StudentDTO;
+import com.basic.myspringboot.entity.Department;
 import com.basic.myspringboot.entity.Student;
 import com.basic.myspringboot.entity.StudentDetail;
 import com.basic.myspringboot.exception.BusinessException;
 import com.basic.myspringboot.exception.ErrorCode;
+import com.basic.myspringboot.repository.DepartmentRepository;
 import com.basic.myspringboot.repository.StudentDetailRepository;
 import com.basic.myspringboot.repository.StudentRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,16 +23,17 @@ public class StudentService {
 
     private final StudentRepository studentRepository;
     private final StudentDetailRepository studentDetailRepository;
+    private final DepartmentRepository departmentRepository;
 
     public List<StudentDTO.Response> getAllStudents() {
         return studentRepository.findAll()
                 .stream()
                 .map(StudentDTO.Response::fromEntity)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public StudentDTO.Response getStudentById(Long id) {
-        Student student = studentRepository.findByIdWithStudentDetail(id)
+        Student student = studentRepository.findByIdWithAllDetails(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND,
                         "Student", "id", id));
         return StudentDTO.Response.fromEntity(student);
@@ -44,8 +46,26 @@ public class StudentService {
         return StudentDTO.Response.fromEntity(student);
     }
 
+    public List<StudentDTO.Response> getStudentsByDepartmentId(Long departmentId) {
+        // Validate department exists
+        if (!departmentRepository.existsById(departmentId)) {
+            throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND,
+                    "Department", "id", departmentId);
+        }
+
+        return studentRepository.findByDepartmentId(departmentId)
+                .stream()
+                .map(StudentDTO.Response::fromEntity)
+                .toList();
+    }
+
     @Transactional
     public StudentDTO.Response createStudent(StudentDTO.Request request) {
+        // Validate department exists
+        Department department = departmentRepository.findById(request.getDepartmentId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND,
+                        "Department", "id", request.getDepartmentId()));
+
         // Validate student number is not already in use
         if (studentRepository.existsByStudentNumber(request.getStudentNumber())) {
             throw new BusinessException(ErrorCode.STUDENT_NUMBER_DUPLICATE,
@@ -68,6 +88,7 @@ public class StudentService {
         Student student = Student.builder()
                 .name(request.getName())
                 .studentNumber(request.getStudentNumber())
+                .department(department)
                 .build();
 
         // Create student detail if provided
@@ -95,6 +116,11 @@ public class StudentService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND,
                         "Student", "id", id));
 
+        // Validate department exists (if changing)
+        Department department = departmentRepository.findById(request.getDepartmentId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND,
+                        "Department", "id", request.getDepartmentId()));
+
         // Check if another student already has the student number
         if (!student.getStudentNumber().equals(request.getStudentNumber()) &&
                 studentRepository.existsByStudentNumber(request.getStudentNumber())) {
@@ -105,6 +131,7 @@ public class StudentService {
         // Update student basic info
         student.setName(request.getName());
         student.setStudentNumber(request.getStudentNumber());
+        student.setDepartment(department);
 
         // Update student detail if provided
         if (request.getDetailRequest() != null) {
@@ -164,8 +191,7 @@ public class StudentService {
                 studentDetailRepository.existsByPhoneNumber(detailRequest.getPhoneNumber());
     }
 
-    private boolean isEmailChangingAndExists(StudentDetail currentDetail
-            , StudentDTO.StudentDetailDTO newDetail) {
+    private boolean isEmailChangingAndExists(StudentDetail currentDetail, StudentDTO.StudentDetailDTO newDetail) {
         return newDetail.getEmail() != null &&
                 !newDetail.getEmail().isEmpty() &&
                 (currentDetail.getEmail() == null ||
@@ -173,8 +199,7 @@ public class StudentService {
                 studentDetailRepository.existsByEmail(newDetail.getEmail());
     }
 
-    private boolean isPhoneNumberChangingAndExists(StudentDetail currentDetail
-            , StudentDTO.StudentDetailDTO newDetail) {
+    private boolean isPhoneNumberChangingAndExists(StudentDetail currentDetail, StudentDTO.StudentDetailDTO newDetail) {
         return (currentDetail.getPhoneNumber() == null ||
                 !currentDetail.getPhoneNumber().equals(newDetail.getPhoneNumber())) &&
                 studentDetailRepository.existsByPhoneNumber(newDetail.getPhoneNumber());
