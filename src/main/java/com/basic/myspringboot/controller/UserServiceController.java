@@ -5,6 +5,7 @@ import com.basic.myspringboot.entity.User;
 import com.basic.myspringboot.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,13 +13,13 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/users")
+@RequestMapping("/api/user-service")
 public class UserServiceController {
     private final UserService userService;
 
     @PostMapping
     public ResponseEntity<UserDTO.UserResponse> create(@Valid @RequestBody
-                                       UserDTO.UserCreateRequest request) {
+                                                       UserDTO.UserCreateRequest request) {
         UserDTO.UserResponse createdUser = userService.createUser(request);
         return ResponseEntity.ok(createdUser);
     }
@@ -47,9 +48,9 @@ public class UserServiceController {
 
     @PatchMapping("/{email}")
     public ResponseEntity<UserDTO.UserResponse> updateUser(@PathVariable String email,
-                                           @Valid @RequestBody UserDTO.UserUpdateRequest userDetail){
+                                                           @Valid @RequestBody UserDTO.UserUpdateRequest useDetail){
 
-        UserDTO.UserResponse updatedUser = userService.updateUserByEmail(email, userDetail);
+        UserDTO.UserResponse updatedUser = userService.updateUserByEmail(email, useDetail);
         return ResponseEntity.ok(updatedUser);
     }
 
