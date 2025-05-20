@@ -1,7 +1,7 @@
 package com.basic.myspringboot.controller;
 
 import com.basic.myspringboot.controller.dto.StudentDTO;
-import com.basic.myspringboot.service.StudentDetailService;
+import com.basic.myspringboot.service.StudentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -10,13 +10,12 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-//StudentController 클래스
 @RestController
-@RequestMapping("/api/students/detail")
+@RequestMapping("/api/students")
 @RequiredArgsConstructor
-public class StudentDetailController {
+public class StudentController {
 
-    private final StudentDetailService studentService;
+    private final StudentService studentService;
 
     @GetMapping
     public ResponseEntity<List<StudentDTO.Response>> getAllStudents() {
@@ -39,7 +38,6 @@ public class StudentDetailController {
     @PostMapping
     public ResponseEntity<StudentDTO.Response> createStudent(@Valid @RequestBody StudentDTO.Request request) {
         StudentDTO.Response createdStudent = studentService.createStudent(request);
-        //HttpStatus.CREATED - 201
         return new ResponseEntity<>(createdStudent, HttpStatus.CREATED);
     }
 
